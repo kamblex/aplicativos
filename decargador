@@ -1,0 +1,47 @@
+import streamlit as st
+from pytube import YouTube
+import yt_dlp
+
+def download_video(url, output_path):
+    yt = YouTube(url)
+    stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+    stream.download(output_path=output_path)
+
+def download_audio(url, output_path):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': f'{output_path}/%(title)s.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+st.title("Descargador de Videos y Música")
+st.write("Introduce una o varias URLs de YouTube, separadas por comas:")
+
+urls = st.text_area("URLs de YouTube", height=100)
+output_path = st.text_input("Ruta de salida", value="downloads")
+
+if st.button("Descargar Videos"):
+    url_list = [url.strip() for url in urls.split(',')]
+    for url in url_list:
+        try:
+            st.write(f"Descargando video desde {url}...")
+            download_video(url, output_path)
+            st.write(f"Video descargado en {output_path}")
+        except Exception as e:
+            st.write(f"Error descargando video desde {url}: {e}")
+
+if st.button("Descargar Música"):
+    url_list = [url.strip() for url in urls.split(',')]
+    for url in url_list:
+        try:
+            st.write(f"Descargando audio desde {url}...")
+            download_audio(url, output_path)
+            st.write(f"Audio descargado en {output_path}")
+        except Exception as e:
+            st.write(f"Error descargando audio desde {url}: {e}")
